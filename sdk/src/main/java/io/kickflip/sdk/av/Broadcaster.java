@@ -89,7 +89,7 @@ public class Broadcaster extends AVRecorder {
      * @param CLIENT_ID     the Client ID available from your Kickflip.io dashboard.
      * @param CLIENT_SECRET the Client Secret available from your Kickflip.io dashboard.
      */
-    public Broadcaster(Context context, SessionConfig config, String CLIENT_ID, String CLIENT_SECRET) {
+    public Broadcaster(Context context, SessionConfig config, String CLIENT_ID, String CLIENT_SECRET) throws IOException {
         super(config);
         checkArgument(CLIENT_ID != null && CLIENT_SECRET != null);
         init();
@@ -350,11 +350,13 @@ public class Broadcaster extends AVRecorder {
             if (VERBOSE)
                 Log.i(TAG, "Copying " + e.getManifestFile().getAbsolutePath() + " to " + copy.getAbsolutePath());
             FileUtils.copy(e.getManifestFile(), copy);
+            queueOrSubmitUpload(keyForFilename("index.m3u8"), copy);
+            appendLastManifestEntryToEventManifest(copy, !isRecording());
         } catch (IOException e1) {
+            Log.e(TAG, "Failed to copy manifest file. Upload of this manifest cannot proceed. Stream will have a discontinuity!");
             e1.printStackTrace();
         }
-        queueOrSubmitUpload(keyForFilename("index.m3u8"), copy);
-        appendLastManifestEntryToEventManifest(copy, !isRecording());
+
         mNumSegmentsWritten++;
     }
 
